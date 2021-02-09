@@ -1,0 +1,12 @@
+.col {
+
+  width:5%;
+  min-width:20px;   
+}
+.container{
+  width: 1024px;
+  margin: auto;
+}
+#MyTable{
+  width: 100%;
+}
