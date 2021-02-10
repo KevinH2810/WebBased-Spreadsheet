@@ -58,10 +58,15 @@ function calculate(input) {
 					inputString.indexOf(")") + 1
 				);
 
+				//if using formula
+				let formula = inputString
+					.substring(0, inputString.indexOf("("))
+					.toUpperCase();
+
 				var regex = /([0-9]+):([A-Z])/i;
 				//case: =SUM(A1:D1) -> =SUM(A1, B1, C1, D1)
 				//valueAddress()
-				if (inputString.match(regex)) {
+				if (inputString.match(regex) && (formula == "SUM" || formula == "AVERAGE")) {
 					inputString =
 						inputString.substring(0, inputString.indexOf("(")) +
 						getDataAddress(valueAddress);
@@ -76,10 +81,7 @@ function calculate(input) {
 				inputString =
 					inputString.substring(0, inputString.indexOf("(")) +
 					replaceAddressWithValue(valueAddress, input);
-				//if using formula
-				let formula = inputString
-					.substring(0, inputString.indexOf("("))
-					.toUpperCase();
+				
 				let checkFormula = ["MULTIPLY", "DIVIDE", "ADD"];
 				let toCheck = valueAddress
 					.replaceAll("(", "")
@@ -133,17 +135,21 @@ function translateData(formula, data) {
 			return valueAddress.replaceAll(",", "*");
 		case "DIVIDE":
 			return valueAddress.replaceAll(",", "/");
+		case "AVERAGE":
+			return valueAddress.replaceAll(",", "+") + "/" + valueAddress.length;
 	}
 }
 
 function getDataAddress(data) {
 	let res = []
-	let dataArr = data.substring(-1).split(":")
+	let dataArr = data.substring(1, data.length-1).split(":")
+	console.log(`dataArr = ${dataArr}`)
 	let arrSort = dataArr.sort()
+	console.log(`arrSort = ${arrSort}`)
 	let lowestArr = arrSort[0]
 	let highestArr = arrSort[arrSort.length-1]
-	let lowestArrAlphabet = lowestArr.split("")[1]
-	let lowestArrNum = lowestArr.split("")[2]
+	let lowestArrAlphabet = lowestArr.split("")[0]
+	let lowestArrNum = lowestArr.split("")[1]
 
 	let highestArrAlphabet = highestArr.split("")[0]
 	let highestArrNum = highestArr.split("")[1]
