@@ -50,34 +50,57 @@ function calculate(input) {
 
 		let inputString = input.value.toUpperCase().trim();
 		if (inputString.charAt(0) == "=") {
+			//if using =
 			inputString = inputString.substring(1); // get after first
-			//=D44*3
-			//Input = D45 || D44 * 3
-			// change if using : ex= :D12 : D17
-			//input =SUM(A1,B1)
-            //2*5+(9-1)
-            let valueAddress = inputString.substring(inputString.indexOf("("), inputString.indexOf(")") + 1)
-			inputString = inputString.substring(0, inputString.indexOf("(")) + replaceAddressWithValue(valueAddress, input);
-			console.log(`inputString = ${inputString}`)
-            //= D11: D15
-			//if using formula
 			if (isFormula(inputString)) {
-				let formula = inputString.substring(0, inputString.indexOf("(")).toUpperCase();
+				let valueAddress = inputString.substring(
+					inputString.indexOf("("),
+					inputString.indexOf(")") + 1
+				);
+
+				var regex = /([0-9]+):([A-Z])/i;
+				//case: =SUM(A1:D1) -> =SUM(A1, B1, C1, D1)
+				//valueAddress()
+				if (inputString.match(regex)) {
+					inputString =
+						inputString.substring(0, inputString.indexOf("(")) +
+						getDataAddress(valueAddress);
+				}
+
+				valueAddress = inputString.substring(
+					inputString.indexOf("("),
+					inputString.indexOf(")") + 1
+				);
+				//translate A1:C1 -> A1, B1, C1
+
+				inputString =
+					inputString.substring(0, inputString.indexOf("(")) +
+					replaceAddressWithValue(valueAddress, input);
+				//if using formula
+				let formula = inputString
+					.substring(0, inputString.indexOf("("))
+					.toUpperCase();
 				let checkFormula = ["MULTIPLY", "DIVIDE", "ADD"];
+				let toCheck = valueAddress
+					.replaceAll("(", "")
+					.replaceAll(")", "")
+					.split(",");
+				console.log(`toCheck = ${toCheck}, ${toCheck.length}`);
 				if (
 					checkFormula.includes(formula) &&
-					(inputString.length >= 2 || inputString.length == 1)
+					(toCheck.length > 2 || toCheck.length == 1)
 				) {
 					input.value = "#N/A";
+					return;
 				}
-				let translateData = translateData(formula, inputString);
-				input.value = calculateStringEval(translateData);
+				let translatedData = translateData(formula, inputString);
+				console.log(`translateData = ${translatedData}`)
+				input.value = calculateStringEval(translatedData);
 			} else {
-				//if not using formula
 				input.value = calculateStringEval(inputString);
 			}
 
-			// console.log('seleseai' + calculateString(inputString));
+			console.log('seleseai' + calculateString(inputString));
 			step2(getElementsById(input.getAttribute("reference")));
 		} else {
 			let parsedNo = Number.parseInt(input.value);
@@ -100,39 +123,49 @@ function calculate(input) {
 }
 
 function translateData(formula, data) {
-	let res = [];
+	let valueAddress = data.substring(data.indexOf("("), data.indexOf(")") + 1);
 	switch (formula) {
 		case "SUM":
-			data.forEach((element) => {
-				res.push(element);
-				res.push("+");
-			});
-			return res.substring(0, str.length - 1);
+			return valueAddress.replaceAll(",", "+");
 		case "SUBSTRACT":
-			data.forEach((element) => {
-				res.push(element);
-				res.push("-");
-			});
-			return res.substring(0, str.length - 1);
+			return valueAddress.replaceAll(",", "-");
 		case "MULTIPLY":
-			data.forEach((element) => {
-				res.push(element);
-				res.push("*");
-			});
-			return res.substring(0, str.length - 1);
+			return valueAddress.replaceAll(",", "*");
 		case "DIVIDE":
-			data.forEach((element) => {
-				res.push(element);
-				res.push("/");
-			});
-			return res.substring(0, str.length - 1);
+			return valueAddress.replaceAll(",", "/");
 	}
+}
+
+function getDataAddress(data) {
+	let res = []
+	let dataArr = data.substring(-1).split(":")
+	let arrSort = dataArr.sort()
+	let lowestArr = arrSort[0]
+	let highestArr = arrSort[arrSort.length-1]
+	let lowestArrAlphabet = lowestArr.split("")[1]
+	let lowestArrNum = lowestArr.split("")[2]
+
+	let highestArrAlphabet = highestArr.split("")[0]
+	let highestArrNum = highestArr.split("")[1]
+
+	console.log(`lowestArr ${lowestArr} = ${lowestArrAlphabet}, ${lowestArrNum}`)
+	console.log(`highestArr ${highestArr} = ${highestArrAlphabet}, ${highestArrNum}`)
+
+	let arrAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+	//A1:C1
+	//A1:A10
+	for(let i=lowestArrNum; i<=highestArrNum; i++){
+		for(let j=arrAlphabet.indexOf(lowestArrAlphabet); j<=arrAlphabet.indexOf(highestArrAlphabet); j++){
+			res.push(arrAlphabet[j]+i)
+		}
+	}
+	return "("+res.join()+")"
 }
 
 function isFormula(data) {
 	let parenthesisIndex = data.indexOf("(");
 	const knownFormulas = ["SUM", "MULTIPLY", "SUBSTRACT", "DIVIDE"];
-	console.log(`parenthesisIndex = ${parenthesisIndex}`);
 	if (parenthesisIndex) {
 		let formula = data.substring(0, parenthesisIndex);
 		return knownFormulas.includes(formula);
