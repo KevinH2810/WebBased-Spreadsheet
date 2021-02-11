@@ -76,7 +76,6 @@ function calculate(input) {
 					inputString.indexOf("("),
 					inputString.indexOf(")") + 1
 				);
-				//translate A1:C1 -> A1, B1, C1
 
 				inputString =
 					inputString.substring(0, inputString.indexOf("(")) +
@@ -87,7 +86,6 @@ function calculate(input) {
 					.replaceAll("(", "")
 					.replaceAll(")", "")
 					.split(",");
-				console.log(`toCheck = ${toCheck}, ${toCheck.length}`);
 				if (
 					checkFormula.includes(formula) &&
 					(toCheck.length > 2 || toCheck.length == 1)
@@ -101,8 +99,6 @@ function calculate(input) {
 			} else {
 				input.value = calculateStringEval(inputString);
 			}
-
-			console.log('seleseai' + calculateString(inputString));
 			step2(getElementsById(input.getAttribute("reference")));
 		} else {
 			let parsedNo = Number.parseInt(input.value);
@@ -129,8 +125,6 @@ function translateData(formula, data) {
 	switch (formula) {
 		case "SUM":
 			return valueAddress.replaceAll(",", "+");
-		case "SUBSTRACT":
-			return valueAddress.replaceAll(",", "-");
 		case "MULTIPLY":
 			return valueAddress.replaceAll(",", "*");
 		case "DIVIDE":
