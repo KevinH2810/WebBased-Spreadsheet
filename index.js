@@ -7,8 +7,6 @@ let generateFirstCol = [" "].concat(arrAlphabet);
 let totalRow = 50;
 let colCount = generateFirstCol.length;
 
-// console.log(generateFirstCol)
-// console.log(arrAlphabet)
 for (row = 0; row <= totalRow; row += 1) {
 	tableString += "<tr>";
 
@@ -157,7 +155,6 @@ function calculate(input) {
 					.replaceAll("(", "")
 					.replaceAll(")", "")
 					.split(",");
-				console.log(`toCHeck = ${toCheck}`)
 				if (
 					checkFormula.includes(formula) &&
 					(toCheck.length > 2 || toCheck.length == 1)
@@ -173,11 +170,8 @@ function calculate(input) {
 				let translatedData = translateData(formula, inputString);
 
 				if (calculateFormula.includes(formula)) {
-					console.log("calculateFormula");
-					console.log(`translatedData = ${translatedData}`);
 					input.value = calculateStringEval(translatedData);
 				} else if (seekFormula.includes(formula)) {
-					console.log("seekFormula");
 					input.value = countStringData(formula, translatedData);
 				}
 			} else {
@@ -224,9 +218,7 @@ function translateData(formula, data) {
 function getDataAddress(data) {
 	let res = [];
 	let dataArr = data.substring(1, data.length - 1).split(":");
-	console.log(`dataArr = ${dataArr}`);
 	let arrSort = dataArr.sort();
-	console.log(`arrSort = ${arrSort}`);
 	let lowestArr = arrSort[0];
 	let highestArr = arrSort[arrSort.length - 1];
 	let lowestArrAlphabet = lowestArr.split("")[0];
@@ -234,12 +226,6 @@ function getDataAddress(data) {
 
 	let highestArrAlphabet = highestArr.split("")[0];
 	let highestArrNum = highestArr.split("")[1];
-
-	console.log(`lowestArr ${lowestArr} = ${lowestArrAlphabet}, ${lowestArrNum}`);
-	console.log(
-		`highestArr ${highestArr} = ${highestArrAlphabet}, ${highestArrNum}`
-	);
-
 	let arrAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
 	//A1:C1
@@ -313,15 +299,12 @@ function countStringData(formula, data) {
 			});
 			return count;
 		case "COUNTA":
-			console.log(`newdataArr = ${newdataArr}`);
-			console.log(`newdataArr[0] = ${newdataArr[0]}`);
 			if (newdataArr[0] === "") {
 				newdataArr = newdataArr.slice(1, newdataArr.length);
 			}
 			if (newdataArr[newdataArr.length] === "") {
 				newdataArr = newdataArr.slice(0, -1);
 			}
-			console.log(`newdataArr = ${newdataArr}`);
 			return newdataArr.length;
 	}
 }
