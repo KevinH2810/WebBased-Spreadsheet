@@ -1,4 +1,4 @@
-var tableString = "<table>",
+var tableString = "<table border=1>",
 	body = document.getElementsByTagName("body")[0],
 	div = document.createElement("div");
 
@@ -22,7 +22,7 @@ for (row = 0; row <= totalRow; row += 1) {
 			}
 		} else {
 			inputId = `${cellId}input`;
-			stringInput = `<input style="width:100%" type="text" reference="" id="${inputId}" name="${inputId}" onfocus="setValueFromFormula(this)" onblur="calculate(this)">`;
+			stringInput = `<input type="text" width="100%" reference="" id="${inputId}" name="${inputId}" onfocus="setValueFromFormula(this)" onblur="calculate(this)">`;
 
 			if (col == 0) {
 				tableString += `<td class="notCell" id="${cellId}"> ${row} </td>`;
@@ -63,10 +63,11 @@ function calculate(input) {
 					.substring(0, inputString.indexOf("("))
 					.toUpperCase();
 
-				var regex = /([0-9]+):([A-Z])/i;
+				var regex = /([0-9]):([A-Z])/i;
+				const multipleCellFormula = ["SUM", "AVERAGE", "COUNT", "COUNTA"]
 				//case: =SUM(A1:D1) -> =SUM(A1, B1, C1, D1)
 				//valueAddress()
-				if (inputString.match(regex) && (formula == "SUM" || formula == "AVERAGE")) {
+				if (inputString.match(regex) && multipleCellFormula.includes(formula)) {
 					inputString =
 						inputString.substring(0, inputString.indexOf("(")) +
 						getDataAddress(valueAddress);
@@ -77,10 +78,10 @@ function calculate(input) {
 					inputString.indexOf(")") + 1
 				);
 
+				//if LEN,COUNT,COUNTA. replaceAddressWithValue must be empty
 				inputString =
 					inputString.substring(0, inputString.indexOf("(")) +
-					replaceAddressWithValue(valueAddress, input);
-				
+					replaceAddressWithValue(formula,valueAddress, input);
 				let checkFormula = ["MULTIPLY", "DIVIDE", "ADD"];
 				let toCheck = valueAddress
 					.replaceAll("(", "")
@@ -92,19 +93,30 @@ function calculate(input) {
 				) {
 					input.value = "#N/A";
 					return;
+				}else if(formula == "LEN" && toCheck.length >1){
+					input.value = "#N/A";
+					return;
 				}
 				let translatedData = translateData(formula, inputString);
-				console.log(`translateData = ${translatedData}`)
-				input.value = calculateStringEval(translatedData);
+				const calculateFormula = ["SUM", "DIVIDE", "AVERAGE", "MULTIPLY"]
+				const seekFormula = ["LEN", "COUNT", "COUNTA"]
+				if (calculateFormula.includes(formula)){
+					console.log("calculateFormula")
+					input.value = calculateStringEval(translatedData);
+				}else if (seekFormula.includes(formula)){
+					console.log("seekFormula")
+					input.value = countStringData(formula, translatedData)
+				}
 			} else {
 				input.value = calculateStringEval(inputString);
 			}
 			step2(getElementsById(input.getAttribute("reference")));
-		} else {
-			let parsedNo = Number.parseInt(input.value);
-			input.value = parsedNo;
-			if (isNumber(parsedNo)) {
+		} 
+		else{
+			if (Number.parseInt(input.value)) {
 				console.log(true);
+				let parsedNo = Number.parseInt(input.value);
+				input.value = parsedNo;
 				step2(getElementsById(input.getAttribute("reference")));
 			} else {
 				console.log(false);
@@ -131,6 +143,8 @@ function translateData(formula, data) {
 			return valueAddress.replaceAll(",", "/");
 		case "AVERAGE":
 			return valueAddress.replaceAll(",", "+") + "/" + valueAddress.length;
+		default:
+			return valueAddress
 	}
 }
 
@@ -165,7 +179,7 @@ function getDataAddress(data) {
 
 function isFormula(data) {
 	let parenthesisIndex = data.indexOf("(");
-	const knownFormulas = ["SUM", "MULTIPLY", "SUBSTRACT", "DIVIDE"];
+	const knownFormulas = ["SUM", "MULTIPLY", "SUBSTRACT", "DIVIDE", "LEN", "COUNT", "COUNTA"];
 	if (parenthesisIndex) {
 		let formula = data.substring(0, parenthesisIndex);
 		return knownFormulas.includes(formula);
@@ -182,6 +196,45 @@ function calculateStringEval(expression) {
 	return eval(expression);
 }
 
+function countStringData(formula, data){
+	let dataArr = data.split(",")
+	let newdataArr = dataArr.filter(el => {
+  	return el != null && el != '';
+	});
+	let count = 0;
+	const regexNum = /([0-9])/i;
+
+	switch (formula){
+		case "LEN":
+			let dataLenArr = data.split("")
+			if(dataLenArr[0] === ""){
+				dataLenArr = dataLenArr.slice(1, dataLenArr.length)
+			}
+			if(dataLenArr[dataLenArr.length] === ""){
+				dataLenArr = dataLenArr.slice(0, -1)
+			}
+			return dataLenArr.length
+		case "COUNT":
+			newdataArr.forEach(elem => {
+				if (elem.match(regexNum)){
+					count++
+				}
+			})
+		return count
+		case "COUNTA":
+			console.log(`newdataArr = ${newdataArr}`)
+			console.log(`newdataArr[0] = ${newdataArr[0]}`)
+			if(newdataArr[0] === ""){
+				newdataArr = newdataArr.slice(1, newdataArr.length)
+			}
+			if(newdataArr[newdataArr.length] === ""){
+				newdataArr = newdataArr.slice(0, -1)
+			}
+			console.log(`newdataArr = ${newdataArr}`)
+			return newdataArr.length
+		} 
+}
+
 // Utilities
 function setFormula(element) {
 	element.setAttribute("formula", element.value);
@@ -195,7 +248,8 @@ function isEmptyOrSpaces(str) {
 	return str === null || str.match(/^ *$/) !== null;
 }
 
-function replaceAddressWithValue(expression, source) {
+function replaceAddressWithValue(formula, expression, source) {
+	const notNumFormula = ["LEN", "COUNT", "COUNTA"]
 	expression.toUpperCase();
 	arrOfEx = expression.split("");
 	newExpression = [];
@@ -217,7 +271,13 @@ function replaceAddressWithValue(expression, source) {
 					return "wrong address";
 				}
 			}
-			setReference(`${cellAddress.join("")}input`, source);
+			
+			if(notNumFormula.includes(formula)){
+				setReferenceNotcalculate(`${cellAddress.join("")}input`, source);
+			}else{
+				setReference(`${cellAddress.join("")}input`, source);	
+			}
+			
 		} else {
 			newExpression.push(arrOfEx[i]);
 		}
@@ -226,14 +286,30 @@ function replaceAddressWithValue(expression, source) {
 	return newExpression.join("");
 }
 
+function setReferenceNotcalculate(id, source) {
+	let element = document.getElementById(id);
+	currentReference = element.getAttribute("reference");
+	// if (!isStringExist(source.id, currentReference)) {
+	// 	element.setAttribute("reference", `${currentReference ?? ""},${source.id}`);
+	// }
+	element.setAttribute("reference", `${currentReference ?? ""},${source.id}`);
+
+	newExpression.push(element.value);
+}
+
 function setReference(id, source) {
 	let element = document.getElementById(id);
 	currentReference = element.getAttribute("reference");
+	
 	if (!isStringExist(source.id, currentReference)) {
 		element.setAttribute("reference", `${currentReference ?? ""},${source.id}`);
 	}
 
-	newExpression.push(element.value ? element.value : 0);
+	if (Number.parseInt(element.value)){
+		newExpression.push(element.value ? element.value : 0);
+	}else{
+		newExpression.push(0);
+	}
 }
 
 function isStringExist(stringSource, stringTarget) {
