@@ -102,6 +102,7 @@ function calculate(input) {
 				const seekFormula = ["LEN", "COUNT", "COUNTA"]
 				if (calculateFormula.includes(formula)){
 					console.log("calculateFormula")
+					console.log(`translatedData = ${translatedData}`)
 					input.value = calculateStringEval(translatedData);
 				}else if (seekFormula.includes(formula)){
 					console.log("seekFormula")
@@ -142,7 +143,8 @@ function translateData(formula, data) {
 		case "DIVIDE":
 			return valueAddress.replaceAll(",", "/");
 		case "AVERAGE":
-			return valueAddress.replaceAll(",", "+") + "/" + valueAddress.length;
+			let divider = valueAddress.replace(/\D/g, "")
+			return valueAddress.replaceAll(",", "+") + "/" + divider.length;
 		default:
 			return valueAddress
 	}
@@ -179,7 +181,7 @@ function getDataAddress(data) {
 
 function isFormula(data) {
 	let parenthesisIndex = data.indexOf("(");
-	const knownFormulas = ["SUM", "MULTIPLY", "SUBSTRACT", "DIVIDE", "LEN", "COUNT", "COUNTA"];
+	const knownFormulas = ["SUM", "MULTIPLY", "SUBSTRACT", "DIVIDE", "LEN", "COUNT", "COUNTA", "AVERAGE"];
 	if (parenthesisIndex) {
 		let formula = data.substring(0, parenthesisIndex);
 		return knownFormulas.includes(formula);
@@ -271,7 +273,7 @@ function replaceAddressWithValue(formula, expression, source) {
 					return "wrong address";
 				}
 			}
-			
+
 			if(notNumFormula.includes(formula)){
 				setReferenceNotcalculate(`${cellAddress.join("")}input`, source);
 			}else{
