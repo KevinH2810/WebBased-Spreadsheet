@@ -1,0 +1,93 @@
+How To Test
+
+There are several cases you can test
+
+function : SUM()
+instruction : used to sum up all values inside the provided cells in arguments field
+args : A1, A2,A3,...
+step : 
+  1. fill any cell with any numbers you desired example = A1: 34 B3: 15 C7:1.
+  2. choose any cell outside of the range of the cells area that will be summed. 
+     in case of the example it will be from A1 -> A7 and C1 -> C7. you can choose like A10 B20 or C8.
+  3. fill the formula and the args. =SUM(A1, A2, A3, ..., C7) or you can type =SUM(A1:C7)
+
+function : AVERAGE()
+instruction : used to sum up all values inside the provided cells in arguments field divided by the total cells that has value in it.
+args : A1, A2,A3,...
+step : 
+  1. fill any cell with any numbers you desired example = A1: 34 B3: 15 C7:1.
+  2. choose any cell outside of the range of the cells area that will be summed and divided. 
+     in case of the example it will be from A1 -> A7 and C1 -> C7. you can choose like A10 B20 or C8.
+  3. fill the formula and the args. =AVERAGE(A1, A2, A3, ..., C7) or you can type =AVERAGE(A1:C7)
+
+function : MULTIPLY()
+instruction : used to multiply values inside the provided 2 cells in arguments field where val1 multiplied by val2
+args : val1, val2
+step : 
+  1. fill any cell with any numbers you desired example = A1: 34 B3: 15 C7:1.
+  2. choose any cell other cell to write the formula.
+  3. fill the formula and the args with 2 cells you choose. example: =MULTIPLY(B10, D6), =MULTIPLY(100, 10) or =MULTIPLY(100, F4)
+
+function : DIVIDE()
+instruction : used to divide values inside the provided where val1 divided by val2
+args : val1, val2
+step : 
+  1. fill any cell with any numbers you desired example = A1: 34 B3: 15.
+  2. choose any cell other cell to write the formula
+  3. fill the formula and the args with 2 cells you choose. example: =DIVIDE(B10, D6), =DIVIDE(100, 10) or =DIVIDE(100, F4)
+
+function : LEN()
+instruction : used to count the length of value inside a cell. beware that spaces are counted.
+args : val1
+step : 
+  1. fill any cell with any numbers you desired example = A1: 34 B3: 15 C8: ab354 D5: hhjgk.
+  2. choose any cell other cell to write the formula.
+  3. fill the formula and the args with cell you choose. example: =LEN(B10) or =LEN("abcdefg")
+
+function : COUNT()
+instruction : used to count how many cell that has number in it.
+args : A1, A2,A3,...
+step : 
+  1. fill any cell with any numbers you desired example = A1: 34 B3: 15 C8: ab354 D5: hhjgk.
+  2. choose any cell other cell to write the formula outside the range.
+  3. fill the formula and the args with cells you choose. example: =COUNT(B10: G5)
+
+function : COUNTA()
+instruction : same as COUNT() but COUNTA() wil count all cell that has value on it regardless their data type 
+args : A1, A2,A3,...
+step : 
+  1. fill any cell with any numbers you desired example = A1: 34 B3: 15 C8: ab354 D5: hhjgk.
+  2. choose any cell other cell to write the formula outside the range.
+  3. fill the formula and the args with cells you choose. example: =COUNTA(B10: G5)
+
+function  : RIGHT()
+instruction : Used to get string from right/Ending of cell/text on `val1` based on how much `val2` is.
+args : val1, val2
+step : 
+  1. fill any cell with anything you desired example = A1: 34 B3: 15 C8: ab354 D5: hhjgk.
+  2. choose any cell other cell to write the formula outside the range.
+  3. fill the formula and the args with cells you choose. example: =RIGHT(B10, 3)
+
+function  : LEFT()
+instruction : Used to get string from LEFT/beginning of the cell/text on `val1` based on how much `val2` is
+args : val1, val2
+step : 
+  1. fill any cell with anything you desired example = A1: 34 B3: 15 C8: ab354 D5: hhjgk.
+  2. choose any cell other cell to write the formula outside the range.
+  3. fill the formula and the args with cells you choose. example: =LEFT(B10, 3)
+
+function  : LEFT()
+instruction : Used to get string from LEFT/beginning of the cell/text on `val1` based on how much `val2` is
+args : val1, val2
+step : 
+  1. fill any cell with anything you desired example = A1: 34 B3: 15 C8: ab354 D5: hhjgk.
+  2. choose any cell other cell to write the formula outside the range.
+  3. fill the formula and the args with cells you choose. example: =LEFT(B10, 3)
+
+function  : MID()
+instruction : Used to get string from position `val2` on cell/text `val1` based on how much `val3` is
+args : val1, val2, val3
+step : 
+  1. fill any cell with anything you desired example = A1: 34 B3: 15 C8: ab354 D5: hhjgk.
+  2. choose any cell other cell to write the formula outside the range.
+  3. fill the formula and the args with cells you choose. example: =LEFT(B10, 2, 3)
