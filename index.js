@@ -93,15 +93,11 @@ function calculate(input) {
 					replaceAddressWithValue(formula, valueAddress, input);
 				}
 
-				console.log(valueAddress)
-
 				if(isFormula(inputString)){
 					inputString =
 					inputString.substring(0, inputString.indexOf("(")) +
 					replaceAddressWithValue(formula, valueAddress, input);
 				}
-
-				console.log(`value after replaced = ${inputString}`)
 
 				//get latest valueAddress after replaced
 				valueAddress = inputString.substring(
@@ -415,7 +411,6 @@ function setReference(id, source) {
 	let element = document.getElementById(id);
 	currentReference = element.getAttribute("reference");
 
-	console.log(`element value = ${element.value}`)
 	if (!isStringExist(source.id, currentReference)) {
 		console.log(`is a string`)
 		element.setAttribute("reference", `${currentReference ?? ""},${source.id}`);
