@@ -1,35 +1,41 @@
-var tableString = "<table border=1>",
-	body = document.getElementsByTagName("body")[0],
-	div = document.createElement("div");
+var tableString = "<table>",
+    body = document.getElementsByTagName('body')[0],
+    div = document.createElement('div');
 
-let arrAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-let generateFirstCol = [" "].concat(arrAlphabet);
-let totalRow = 50;
-let colCount = generateFirstCol.length;
+    let arrAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    let generateFirstCol = [" "].concat(arrAlphabet);
+    let totalRow = 50;
+    let colCount = generateFirstCol.length;
 
+    // console.log(generateFirstCol)
+    // console.log(arrAlphabet)
 for (row = 0; row <= totalRow; row += 1) {
-	tableString += "<tr>";
+    tableString += "<tr>";
 
-	for (col = 0; col < colCount; col += 1) {
-		cellId = `${generateFirstCol[col]}${row}`;
-		if (row == 0) {
-			if (col == 0) {
-				tableString += `<td class="notCell" id="${cellId}"> ${col} </td>`;
-			} else {
-				tableString += `<td class="notCellRow" id="${cellId}"> ${generateFirstCol[col]} </td>`;
-			}
-		} else {
-			inputId = `${cellId}input`;
-			stringInput = `<input type="text" width="100%" reference="" id="${inputId}" name="${inputId}" onfocus="setValueFromFormula(this)" onblur="calculate(this)">`;
+    for (col = 0; col < colCount; col += 1) {
+        cellId = `${generateFirstCol[col]}${row}`;
+        if(row == 0){
+            if(col == 0){
+                tableString += `<td class="notCell" id="${cellId}"> ${col} </td>`;
+            }
+            else{
+                tableString += `<td class="notCellRow" id="${cellId}"> ${generateFirstCol[col]} </td>`;
+            }
+        }
+        else{
+            inputId = `${cellId}input`;
+            stringInput = `<input style="width:100%" type="text" reference="" id="${inputId}" name="${inputId}" onfocus="setValueFromFormula(this)" onblur="calculate(this)">`
 
-			if (col == 0) {
-				tableString += `<td class="notCell" id="${cellId}"> ${row} </td>`;
-			} else {
-				tableString += `<td id="${cellId}">${stringInput}</td>`;
-			}
-		}
-	}
-	tableString += "</tr>";
+            if(col == 0){
+                tableString += `<td class="notCell" id="${cellId}"> ${row} </td>`;
+            }
+            else{
+                tableString += `<td id="${cellId}">${stringInput}</td>`;
+            }
+
+        }
+    }
+    tableString += "</tr>";
 }
 
 tableString += "</table>";
@@ -37,421 +43,294 @@ div.innerHTML = tableString;
 div.classList.add("wrapper");
 body.appendChild(div);
 
-function calculate(input) {
-	console.log(`onblur called ${input.id}`);
-	step1 = function (step2) {
-		setFormula(input);
-		if (isEmptyOrSpaces(input.value)) {
-			step2(getElementsById(input.getAttribute("reference")));
-			return;
-		}
-		const multipleCellFormula = ["SUM", "AVERAGE", "COUNT", "COUNTA"];
-		const calculateFormula = ["SUM", "DIVIDE", "AVERAGE", "MULTIPLY"];
-		const seekFormula = ["LEN", "COUNT", "COUNTA"];
-		const manipulateStringFormula = ["RIGHT", "MID", "LEFT"];
+function calculate(input) 
+{
+    console.log(`onblur called ${input.id}`)
+    step1 = function(step2){
+        setFormula(input);
+        if(isEmptyOrSpaces(input.value))
+        {
+            step2(getElementsById(input.getAttribute('reference')))
+            return;
+        }
 
-		let inputString = input.value.toUpperCase().trim();
-		if (inputString.charAt(0) == "=") {
-			//if using =
-			inputString = inputString.substring(1); // get after first
-			if (isFormula(inputString)) {	
-				console.log("is a formula")
-				if(!inputString.indexOf(")") || !inputString.indexOf("(")){
-					input.value = "#N/A";
-					alert(`( or ) not found.`);
-					return;
-				}
+        let inputString = input.value.toUpperCase();
+        if(inputString.charAt(0) == "=")
+        {
+            inputString = inputString.substring(1); // get after first
+            debugger;
+            input.value = calculateDetail(inputString, input)
+            step2(getElementsById(input.getAttribute('reference')))
+        }
+        else
+        {
+            let parsedNo = Number.parseInt(input.value);
+            input.value = parsedNo;
+            if(isNumber(parsedNo))
+            {
+                console.log(true)
+                step2(getElementsById(input.getAttribute('reference')))
+            }
+            else
+            {
+                console.log(false)
+                step2(getElementsById(input.getAttribute('reference')))
+            }
+        }
+    }
 
-				let valueAddress = inputString.substring(
-					inputString.indexOf("("),
-					inputString.indexOf(")") + 1
-				);
+    step2 = function(elements){
+         recalculateElements(elements);
+    }
 
-				//if using formula
-				let formula = inputString
-					.substring(0, inputString.indexOf("("))
-					.toUpperCase();
-
-				let regex = /([0-9]):([A-Z])/i;
-
-				if (inputString.match(regex) && multipleCellFormula.includes(formula)) {
-					inputString =
-						inputString.substring(0, inputString.indexOf("(")) +
-						getDataAddress(valueAddress);
-				}
-				
-				valueAddress = inputString.substring(
-					inputString.indexOf("("),
-					inputString.indexOf(")") + 1
-				);
-				
-				//if LEN,COUNT,COUNTA. replaceAddressWithValue must be empty
-				let regexLenCheck = /\s([A-Z])([0-9])\s/i;
-				if(seekFormula.includes(formula) && inputString.match(regexLenCheck)){
-					inputString =
-					inputString.substring(0, inputString.indexOf("(")) +
-					replaceAddressWithValue(formula, valueAddress, input);
-				}
-
-				console.log(valueAddress)
-
-				if(isFormula(inputString)){
-					inputString =
-					inputString.substring(0, inputString.indexOf("(")) +
-					replaceAddressWithValue(formula, valueAddress, input);
-				}
-
-				console.log(`value after replaced = ${inputString}`)
-
-				//get latest valueAddress after replaced
-				valueAddress = inputString.substring(
-					inputString.indexOf("("),
-					inputString.indexOf(")") + 1
-				);
-				
-				//if formula = RIGHT, LEFT or MID
-				if (manipulateStringFormula.includes(formula)) {
-					//delete the ( and )
-					valueAddress = valueAddress.slice(1, valueAddress.length - 1);
-					//valueAddress = "bgm",2
-					valueAddress = valueAddress.split(",");
-					let number = 1;
-					let text = valueAddress[0];
-					if (typeof text != "string") {
-						text = String(text);
-					}
-					switch (formula) {
-						//to check if arg given is more than 2
-						case "RIGHT":
-							if (valueAddress.length > 2) {
-								input.value = "#N/A";
-								alert(
-									"Wrong number of arguments to RIGHT. Expected between 1 and 2 arguments, but got 3 arguments."
-								);
-								return;
-							}
-
-							if (parseInt(valueAddress[1])) {
-								number = parseInt(valueAddress[1]);
-							}
-							input.value = text.substring(text.length - number, text.length);
-							return;
-						case "LEFT":
-							//to check if arg given is more than 2
-							if (valueAddress.length > 2) {
-								input.value = "#N/A";
-								alert(
-									"Wrong number of arguments to LEFT. Expected between 1 and 2 arguments, but got 3 arguments."
-								);
-								return;
-							}
-
-							if (parseInt(valueAddress[1])) {
-								number = parseInt(valueAddress[1]);
-							}
-							input.value = text.substring(0, number);
-							return;
-						case "MID":
-							if (valueAddress.length !== 3) {
-								input.value = "#N/A";
-								alert(
-									"Wrong number of arguments to MID. Expected 3 arguments, but got 2 arguments."
-								);
-								return;
-							}
-
-							if (valueAddress[1] == 0) {
-								input.value = "#NUM!";
-								alert(
-									"function MID parameter 2 is 0. it should be greater than equal to 1"
-								);
-								return;
-							}
-
-							let startPos = valueAddress[1] - 1;
-							let howMany = valueAddress[2];
-							input.value = text.substring(startPos, howMany);
-							return;
-					}
-				}
-
-				let checkFormula = ["MULTIPLY", "DIVIDE", "ADD"];
-				let toCheck = valueAddress
-					.replaceAll("(", "")
-					.replaceAll(")", "")
-					.split(",");
-				if (
-					checkFormula.includes(formula) &&
-					(toCheck.length > 2 || toCheck.length == 1)
-				) {
-					alert(
-						`Wrong number of arguments to ${formula}. Expected 2 arguments.`
-					);
-					input.value = "#N/A";
-					return;
-				} else if (formula == "LEN" && (toCheck.length > 1 || toCheck == 0)) {
-					input.value = "#N/A";
-					alert(`Wrong number of arguments to LEN. Expected 1 arguments.`);
-					return;
-				}
-				let translatedData = translateData(formula, inputString);
-
-				if (calculateFormula.includes(formula)) {
-					let stringArr = translatedData.split("")
-					stringArr = stringArr.filter(function (el) {
-						return el != null;
-					});
-					translatedData = stringArr.join("")
-					input.value = calculateStringEval(translatedData);
-				} else if (seekFormula.includes(formula)) {
-					//cut ( and )
-					translatedData = translatedData.substring(1, translatedData.length-1)
-					input.value = countStringData(formula, translatedData);
-				}
-			} else {
-				let regex = /([A-Z])([0-9])/i;
-				if (inputString.match(regex)) {
-					inputString = replaceAddressWithValue("", inputString, input);
-					input.value = calculateStringEval(inputString);
-				} else {
-					console.log(`no match with regex`, inputString)
-					input.value = calculateStringEval(inputString);
-				}
-			}
-			step2(getElementsById(input.getAttribute("reference")));
-		} else {
-			if (Number.parseInt(input.value) == input.value) {
-				console.log(true);
-				let parsedNo = Number.parseInt(input.value);
-				input.value = parsedNo;
-				step2(getElementsById(input.getAttribute("reference")));
-			} else {
-				console.log(false);
-				step2(getElementsById(input.getAttribute("reference")));
-			}
-		}
-	};
-
-	step2 = function (elements) {
-		recalculateElements(elements);
-	};
-
-	step1(step2);
+    step1(step2);
 }
 
-function translateData(formula, data) {
-	let valueAddress = data.substring(data.indexOf("("), data.indexOf(")") + 1);
-	switch (formula) {
-		case "SUM":
-			return valueAddress.replaceAll(",", "+");
-		case "MULTIPLY":
-			return valueAddress.replaceAll(",", "*");
-		case "DIVIDE":
-			return valueAddress.replaceAll(",", "/");
-		case "AVERAGE":
-			let divider = valueAddress.replace(/\D/g, "");
-			return valueAddress.replaceAll(",", "+") + "/" + divider.length;
-		default:
-			return valueAddress;
-	}
+function calculateDetail(inputString, input){
+    debugger;
+    let checkExpressionRes = checkExpression(inputString)
+    if(checkExpressionRes.isMethod)
+    {
+        debugger;
+        let ensureFinalExpressionList = [];
+        if(checkExpressionRes.expressionDetail.indexOf(',') !== -1 || checkExpression(checkExpressionRes.expressionDetail).isMethod)
+        {
+            checkExpressionRes.expressionDetail.split(/\s*,\s*(?![^(]*\))/).forEach(function(item){
+                let finalData = item;
+                if(checkExpression(item).isMethod)
+                {
+                    finalData = calculateDetail(item, input)
+                }
+                ensureFinalExpressionList.push(finalData)
+            });
+        }
+
+        switch (checkExpressionRes.methodName)
+        {
+            case "SUM":
+                if(ensureFinalExpressionList.length == 0 && checkExpressionRes.expressionDetail.indexOf(':') !== -1)
+                {
+                    let splitDimension = checkExpressionRes.expressionDetail.split(':');
+                    if(splitDimension.length == 2)
+                    {
+                        inputString = calculateTwoDimension(splitDimension).join("");
+                        inputString = replaceAddressWithValue(inputString, input);
+                    }
+                    else if (splitDimension.length > 2)
+                    {
+                        let lowestPointIndex =null;
+                        let highesPointIndex =null;
+                        let lowestAddressNo = null;
+                        let highesstAddressNo = null;
+
+                        // manual sorting
+                        splitDimension.forEach(function(item, index){
+                            debugger
+                            let currentPointIndex = arrAlphabet.indexOf(item.charAt(0));
+                            let currentAddressNo = parseInt(item.substring(1))
+
+                            if(lowestPointIndex == null)
+                            {
+                                lowestPointIndex = currentPointIndex
+                                highesPointIndex = currentPointIndex
+                                lowestAddressNo = currentAddressNo
+                                highesstAddressNo = currentAddressNo
+                            }
+                            else
+                            {
+                                lowestPointIndex = currentPointIndex > lowestPointIndex ? lowestPointIndex : currentPointIndex;
+                                highesPointIndex = currentPointIndex < lowestPointIndex ? lowestPointIndex : currentPointIndex;
+                                lowestAddressNo = currentAddressNo > lowestAddressNo ? lowestAddressNo : currentAddressNo;
+                                highesstAddressNo = currentAddressNo < lowestAddressNo ? lowestAddressNo : currentAddressNo;
+                            }
+                        });
+                        
+                        let finalExpressionSplit = [`${arrAlphabet[lowestPointIndex]}${lowestAddressNo}`, `${arrAlphabet[highesPointIndex]}${highesstAddressNo}`]
+                        inputString = calculateTwoDimension(finalExpressionSplit).join("");
+                        inputString = replaceAddressWithValue(inputString, input);
+                    }
+                }
+                else
+                {
+                    let splitDetails = ensureFinalExpressionList
+                    let expressionArr = []
+                    splitDetails.forEach(function(item, index){
+                        if(index != 0)
+                        {
+                            expressionArr.push('+');
+                        }
+
+                        expressionArr.push(item);
+                    });
+                    inputString = expressionArr.join("");
+                    inputString = replaceAddressWithValue(inputString, input);
+                }
+                break;
+            case "AVRG":
+                break;
+            default: 
+                0
+        }
+    }
+    else
+    {
+        inputString = replaceAddressWithValue(inputString, input);
+    }
+
+   return calculateStringEval(inputString);
 }
 
-function getDataAddress(data) {
-	let res = [];
-	let dataArr = data.substring(1, data.length - 1).split(":");
-	let arrSort = dataArr.sort();
-	let lowestArr = arrSort[0];
-	let highestArr = arrSort[arrSort.length - 1];
-	let lowestArrAlphabet = lowestArr.split("")[0];
-	let lowestArrNum = lowestArr.split("")[1];
+function calculateTwoDimension(splitDimension){
+    debugger
+    let getPoint1 = arrAlphabet.indexOf(splitDimension[0].charAt(0));
+    let getPoint2 = arrAlphabet.indexOf(splitDimension[1].charAt(0));
+    if(getPoint1 > getPoint2)
+    {
+        let temp =  getPoint1;
+        getPoint1 = getPoint2;
+        getPoint2 = temp;
+    }
 
-	let highestArrAlphabet = highestArr.split("")[0];
-	let highestArrNum = highestArr.split("")[1];
-	let arrAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    let noAddress1 = parseInt(splitDimension[0].substring(1));
+    let noAddress2 = parseInt(splitDimension[1].substring(1));
 
-	//A1:C1
-	//A1:A10
-	for (let i = lowestArrNum; i <= highestArrNum; i++) {
-		for (
-			let j = arrAlphabet.indexOf(lowestArrAlphabet);
-			j <= arrAlphabet.indexOf(highestArrAlphabet);
-			j++
-		) {
-			res.push(arrAlphabet[j] + i);
-		}
-	}
-	return "(" + res.join() + ")";
+    if(noAddress1 > noAddress2)
+    {
+        let temp =  noAddress1;
+        noAddress1 = noAddress2;
+        noAddress2 = temp;
+    }
+    
+    let addressList = [];
+    for(i = getPoint1; i <= getPoint2; i++)
+    {
+        let currentChar = arrAlphabet[i];
+        for(j = noAddress1; j <= noAddress2; j++)
+        {
+            if(!(i == getPoint1 && j == noAddress1))
+            {
+                addressList.push('+');
+            }
+            addressList.push(`${currentChar}${j}`)
+        }
+    }
+
+    return addressList;
 }
 
-function isFormula(data) {
-	let parenthesisIndex = data.indexOf("(");
-	const knownFormulas = [
-		"SUM",
-		"MULTIPLY",
-		"SUBSTRACT",
-		"DIVIDE",
-		"LEN",
-		"COUNT",
-		"COUNTA",
-		"AVERAGE",
-		"RIGHT",
-		"MID",
-		"LEFT",
-	];
-	if (parenthesisIndex) {
-		let formula = data.substring(0, parenthesisIndex);
-		return knownFormulas.includes(formula);
-	} else {
-		return false;
-	}
+function isNumber(value) 
+{
+   return typeof value === 'number' && isFinite(value) ;
 }
 
-function isNumber(value) {
-	return typeof value === "number" && isFinite(value);
-}
-
-function calculateStringEval(expression) {
-	return eval(expression);
-}
-
-function countStringData(formula, data) {
-	let dataArr = data.split(",");
-	let newdataArr = dataArr.filter((el) => {
-		return el != null && el != "";
-	});
-	let count = 0;
-	const regexNum = /([0-9])/i;
-
-	switch (formula) {
-		case "LEN":
-			let dataLenArr = data.split("");
-			if (dataLenArr[0] === "") {
-				dataLenArr = dataLenArr.slice(1, dataLenArr.length);
-			}
-			if (dataLenArr[dataLenArr.length] === "") {
-				dataLenArr = dataLenArr.slice(0, -1);
-			}
-			return dataLenArr.length;
-		case "COUNT":
-			newdataArr.forEach((elem) => {
-				if (elem.match(regexNum)) {
-					count++;
-				}
-			});
-			return count;
-		case "COUNTA":
-			if (newdataArr[0] === "") {
-				newdataArr = newdataArr.slice(1, newdataArr.length);
-			}
-			if (newdataArr[newdataArr.length] === "") {
-				newdataArr = newdataArr.slice(0, -1);
-			}
-			return newdataArr.length;
-	}
+function calculateStringEval(expression)
+{
+    return eval(expression);
 }
 
 // Utilities
-function setFormula(element) {
-	element.setAttribute("formula", element.value);
+function setFormula(element){
+    element.setAttribute("formula", element.value);
 }
 
-function setValueFromFormula(element) {
-	element.value = element.getAttribute("formula");
+function setValueFromFormula(element){
+    element.value = element.getAttribute("formula");
 }
 
-function isEmptyOrSpaces(str) {
-	return str === null || str.match(/^ *$/) !== null;
+function isEmptyOrSpaces(str){
+    return str === null || str.match(/^ *$/) !== null;
 }
 
-function replaceAddressWithValue(formula, expression, source) {
-	const notNumFormula = ["LEN", "COUNT", "COUNTA"];
-	expression.toUpperCase();
-	arrOfEx = expression.split("");
-	newExpression = [];
+function replaceAddressWithValue(expression, source){
+    expression.toUpperCase();
+    arrOfEx = expression.split("")
+    let newExpression = [];
 
-	// isBeforeNumber =
-	currentColumn = null;
-	for (i = 0; i < arrOfEx.length; i += 1) {
-		if (arrOfEx[i].match(/[A-Z]/i)) {
-			rowsLength = 1;
-			cellAddress = [];
-			cellAddress.push(arrOfEx[i]);
-			//R[0]5[1]0[2]
-			while (isNumber(Number.parseInt(arrOfEx[i + 1]))) {
-				if (rowsLength < 4) {
-					cellAddress.push(arrOfEx[i + 1]);
-					rowsLength++;
-					i++;
-				} else {
-					return "wrong address";
-				}
-			}
+    currentColumn = null;
+    for (i = 0; i < arrOfEx.length; i += 1) {
+        if(arrOfEx[i].match(/[A-Z]/i))
+        {  
+            rowsLength = 1;
+            cellAddress = [];
+            cellAddress.push(arrOfEx[i]);
+            while(isNumber(Number.parseInt(arrOfEx[i+1])))
+            {
+                if(rowsLength <4)
+                {
+                    cellAddress.push(arrOfEx[i+1])
+                    rowsLength++;
+                    i++;
+                }
+                else
+                {
+                    return "wrong address";
+                }
+            }
+            
+            let elementValue = getElementValue(`${cellAddress.join("")}input`, source);
+            newExpression.push(elementValue);
+        }
+        else
+        {
+            
+            newExpression.push(arrOfEx[i]);
+        }
+    };
 
-			if (notNumFormula.includes(formula)) {
-				setReferenceNotcalculate(`${cellAddress.join("")}input`, source);
-			} else {
-				setReference(`${cellAddress.join("")}input`, source);
-			}
-		} else {
-			newExpression.push(arrOfEx[i]);
-		}
-	}
-
-	return newExpression.join("");
+    return newExpression.join("");
 }
 
-function setReferenceNotcalculate(id, source) {
-	let element = document.getElementById(id);
-	currentReference = element.getAttribute("reference");
-	// if (!isStringExist(source.id, currentReference)) {
-	// 	element.setAttribute("reference", `${currentReference ?? ""},${source.id}`);
-	// }
-	element.setAttribute("reference", `${currentReference ?? ""},${source.id}`);
+function getElementValue(id, source){
+    let element = document.getElementById(id)
+    currentReference = element.getAttribute('reference')
+    if(!isStringExist(source.id,currentReference)){
+        element.setAttribute('reference',`${currentReference ?? ""},${source.id}`)
+    }
 
-	newExpression.push(element.value);
+    return isEmptyOrSpaces(element.value) ? 0 : element.value;
 }
 
-function setReference(id, source) {
-	let element = document.getElementById(id);
-	currentReference = element.getAttribute("reference");
-
-	console.log(`element value = ${element.value}`)
-	if (!isStringExist(source.id, currentReference)) {
-		console.log(`is a string`)
-		element.setAttribute("reference", `${currentReference ?? ""},${source.id}`);
-	}
-
-	if (Number.parseInt(element.value) == element.value) {
-		newExpression.push(element.value ? element.value : 0);
-	} else {
-		newExpression.push(element.value);
-	}
-}
-
-function isStringExist(stringSource, stringTarget) {
-	return stringTarget.indexOf(stringSource) !== -1;
+function isStringExist(stringSource, stringTarget){
+    return stringTarget.indexOf(stringSource) !== -1
 }
 
 function getElementsById(ids) {
-	// debugger
-	let idList = ids.split(",");
-	let results = [],
-		item;
-	for (var i = 0; i < idList.length; i++) {
-		item = document.getElementById(idList[i])
-			? document.getElementById(idList[i])
-			: 0;
-		if (item) {
-			results.push(item);
-		}
-	}
-	return results;
+    let idList = ids.split(",");
+    let results = [], item;
+    for (var i = 0; i < idList.length; i++) {
+        item = document.getElementById(idList[i]);
+        if (item) {
+            results.push(item);
+        }
+    }
+    return(results);
 }
 
-function recalculateElements(elements) {
-	elements.forEach(function (item, index) {
-		item.value = item.getAttribute("formula");
-		//calling onBlur method
-		item.onblur.call(item);
-	});
+function recalculateElements(elements){
+    elements.forEach(function(item, index){
+        item.value = item.getAttribute("formula");
+        item.onblur.call(item);
+    });
+}
+
+function checkExpression(expression){
+    debugger;
+    let methodNameArr = ["SUM", "AVRG"]
+    let firstOpenBracketIndex = expression.indexOf("(");
+    let methodName = expression.substring(0, firstOpenBracketIndex).toUpperCase();
+    let expressionDetail = expression.substring(firstOpenBracketIndex+1, expression.length+1).toUpperCase();
+    debugger;
+    let openBracketCount = (expressionDetail.match(new RegExp(/\(/g)) || []).length
+    let closingBracketCount = (expressionDetail.match(new RegExp(/\)/g)) || []).length
+    if(closingBracketCount > openBracketCount)
+    {
+        expressionDetail = expressionDetail.slice(0, -1);
+    }
+
+    debugger;
+    return {
+        isMethod : !(firstOpenBracketIndex < 3 || !methodNameArr.includes(methodName)),
+        methodName : methodName,
+        expressionDetail : expressionDetail
+    }
 }
