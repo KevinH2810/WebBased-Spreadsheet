@@ -55,7 +55,6 @@ function calculate(input) {
 			//if using =
 			inputString = inputString.substring(1); // get after first
 			if (isFormula(inputString)) {	
-				console.log("is a formula")
 				if(!inputString.indexOf(")") || !inputString.indexOf("(")){
 					input.value = "#N/A";
 					alert(`( or ) not found.`);
@@ -412,7 +411,6 @@ function setReference(id, source) {
 	currentReference = element.getAttribute("reference");
 
 	if (!isStringExist(source.id, currentReference)) {
-		console.log(`is a string`)
 		element.setAttribute("reference", `${currentReference ?? ""},${source.id}`);
 	}
 
